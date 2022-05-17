@@ -1,0 +1,121 @@
+% MAX type
+% all constrain less than equal to type
+
+% Max,Z=-2x1-x3
+% st:
+% -x1-x2+x3<=-5
+% -x1+2x2-4x3<=-8
+% x1, x2, x3>=0
+
+clear all;
+clc;
+
+Variables={'x1', 'x2', 'x3', 's1', 's2', 'sol'};% Dual Simplex Variables that are used in all equation  
+
+C=[-2,0,-1,0,0,0]; % jo jo variables present hai auski values put krege else 0
+A=[-1,-1,1,1,0;-1,2,-4,0,1]; % differernt from code/video
+b=[-5; -8];% solution matrix
+
+s=eye(size(A, 1));% to store the identity matrix
+
+% find starting BFS 
+%agar identity ban rha ha toh kaha ban rha ha 
+%we r cmprng columnwise
+
+BV=[];
+for j=1:size(s, 2) %loop on columns of table
+    for i=1:size(A, 2)%loop on columns of identity matrix
+        if A(:,i)==s(:,j)% here we are comparing the identidy matrix with the first column 
+            BV=[BV i];% if it is found we are storing their col no ka index in the BV variable
+            %BV =[4 5]
+        end
+    end
+end
+
+fprintf("BASIC VARIABLES =")
+disp(Variables(BV));% printing in actual which variables are Basic Vairables
+%s1 s2
+
+% Finding value of zj-cj row
+A=[A, b]; %complete matrix define karo
+zjcj=C(BV)*A-C; %2 0 1 0 0 
+
+
+% Printing the updated tables columnwise
+table=[zjcj; A];
+arr_table=array2table(table);
+arr_table.Properties.VariableNames(1:size(table,2))=Variables
+%arr_table
+%to show the updated value
+
+% Dual Simplex method starts
+RUN=true;
+while(RUN)
+    sol=A(:,end); %XB ki value save krli humne in SOL
+    if any(sol<0)
+        fprintf("The current solution is not feasible \n");
+
+        % find leaving variable row (most negative min value)
+        [leave_val, pvt_row]=min(sol);
+        %pivot row or say leaving row
+
+        % find entering variable from the colums from selected row's
+        for i=1:size(A,2)-1 %loop for column and isko aakhri vale sol col pr nahi chalana
+            if any(A(pvt_row, i)<0) 
+                ratio(i)=abs(zjcj(i)/A(pvt_row, i));
+            else
+                ratio(i)=inf;
+            end
+        end
+
+
+        % min ratio
+        [min_ratio, pvt_col]=min(ratio);
+        fprintf("Entering Variable col is: %d, leaving variable row is: %d\n", pvt_col, pvt_row);
+    
+        %next iteration ke liye table banao
+        % update BV
+        BV(pvt_row)=pvt_col;
+        fprintf("Basic Variable is=")
+        disp(Variables(BV));
+        %s1,s2 nahi, ab s1,x3 ha BV
+    
+        % updating the pivot row for next iteration
+        pvt_key=A(pvt_row, pvt_col);
+        %dono ke intersection se pvt_key aayegi say -4
+
+        %iss vali row ko nayi tale me /-4 krdenge agar saari values ko toh
+        %1 aajeyga iski jagah
+        A(pvt_row, :)=A(pvt_row, :)/pvt_key;
+    
+       % ab table ki baaki rows bachi ha including zjcj vali
+	   % updating the remaining table values
+        for i=1:size(A,1)
+            if (i~=pvt_row) %update values which are not equal to pivot row
+                A(i, :)=A(i, :)-A(i, pvt_col).*A(pvt_row, :); %r1=r1-r2
+            end
+        end
+    
+        % recalc zjcj
+        zjcj=C(BV)*A-C;
+    
+        % display final table
+        table=[zjcj; A];
+        arr_table=array2table(table);
+        arr_table.Properties.VariableNames(1:size(table,2))=Variables
+        %column header me variables name daaldo, utne hi column names honge
+        %jitne table me columns ha
+    
+    else
+        fprintf("Current BFS is feasible & optimal\n");
+        RUN=false;
+    end
+end
+
+%final optimal solution print
+final_bfs = zeros(1,size(A,2));
+final_bfs(BV) = A(:, end);
+final_bfs(end) = sum(final_bfs.*C);
+
+optimalbfs = array2table(final_bfs);
+optimalbfs.Properties.VariableNames(size(optimalbfs,2)) = Variables
