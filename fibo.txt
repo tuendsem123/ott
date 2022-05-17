@@ -1,0 +1,67 @@
+format short;
+clear all;
+clc;
+
+% define objective function
+% f=@(x) (x<1/2).*((1-x)./2) + (x>=0.5).*(x.^2);
+f=@(x) (x.^2);
+% L=-1;
+% R=1;
+% n=6;
+L=-5;
+R=15;
+n=7;
+
+%-1 to 1 ke beech 100 points construct krke, draw graph
+%t=linspace(L,R,100);
+%plot(t, f(t));
+%plot krdo x and f(x) ke beech me graph ko
+
+% compute fib series
+%kyuki matlab me 0 se index nahi hota so we take f1 and f2=1 and start
+%iteration from 3
+
+fib=ones(1,n);%fib = 1 1 1 1 1 1 1 (7 ones)
+disp(fib)
+for i=3:n+1
+    fib(i)=fib(i-1)+fib(i-2);
+end
+disp(fib)
+%fib = 1 1 2 3 5 8 13 21(8 values kyuki loop till n+1 so F7=21 tak value
+%aayegi)
+
+% iterations
+for k=1:n
+    ratio=fib(n+1-k)/fib(n+2-k);% orig formula: fn-k/fn-k+1
+    %kyuki 0 se start nhai hota so n+1
+    x2=L+ratio.*(R-L);
+    x1=L+R-x2;
+    fx1=f(x1);
+    fx2=f(x2);
+
+    %either f(x1)<f(x2) or vice versa or equal honge dono
+    if fx1<fx2
+        R=x2;
+    elseif fx1>fx2
+        L=x1;
+    elseif fx1==fx2
+        if min(abs(x1),abs(L))==abs(L)
+            R=x2;
+        else
+            L=x1;
+        end
+    end
+end
+
+Variables={'L','R', 'x1', 'x2', 'fx1', 'fx2'};
+%for priting column headers in the table
+%can write ratio as well
+%k no of iterations
+rsl(k, :)=[L, R, x1, x2, fx1, fx2];
+Res1=array2table(rsl);
+Res1.Properties.VariableNames(1:size(Res1,2))=Variables
+
+% optimal val
+xopt=(L+R)/2;
+fopt=f(xopt);
+fprintf("Opimal value of x is at %f optimal value is %f\n", xopt, fopt);
