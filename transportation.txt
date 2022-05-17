@@ -1,0 +1,72 @@
+clear all;
+clc;
+
+C=[11, 20, 7, 8; 21, 16, 10, 12; 8, 12, 18, 9];
+Supply=[50, 40, 70];
+Demand=[30, 25, 35, 40];
+
+% check balanced if not balance
+if (sum(Supply)==sum(Demand))
+    fprintf("Balanced\n");
+else
+    fprintf("Unbalanced\n");
+
+    if (sum(Supply)<sum(Demand))//to add dummy row
+        C(end+1, :) = zeros(1, size(Demand, 2));
+        %the end function returns the index value corresponding to the last 
+        % element in that dimension
+        %zeroes(m,n) i.e.(1*4) ki need here
+        %4 achvg by demand matrix size = 1*4, iska 4 utha rhe ha
+        Supply(end+1)=sum(Demand)-sum(Supply);
+    elseif sum(Demand)<sum(Supply)//to add dummy column 
+        C(:, end+1)=zeros(size(Supply, 2), 1);
+        Demand(end+1)=sum(Supply)-sum(Demand);
+    end
+end
+%ab balnced ha poora
+
+icost=C;%save the cost copy to find the optimal solution
+[m,n]=size(C); %finding rows and columns ka actual size
+bfs=m+n-1;%total no of BFS 
+X=zeros(size(C)); % if X<BFS, then degnrte sol, equal pr non degenerate
+
+for i=1:size(C, 1)
+    for j=1:size(C, 2)        
+        % allocation 
+        min_val=min(min(C));
+        %here 1 time min likhne se poori row as output aajati ha
+
+        [rowind, colind]=find(min_val==C);%but say 3 zero ha, toh ye kaunsa vala ha, to find this out, save
+        %row and column index
+        
+        %agar min krke value same aaya toh, we need to find 
+        %out the max out of all the values and save its index as well
+        [val, idx]=max(min(Supply(rowind), Demand(colind)));
+        ii=rowind(idx);
+        jj=colind(idx);
+        %we will set the allocation at (ii,jj)
+
+        alloc=min(Supply(ii), Demand(jj));
+        %jo value daalni ha
+
+        %X matrix me keep on storing the values
+        X(ii, jj)=alloc;
+        Supply(ii)=Supply(ii)-alloc;
+        Demand(jj)=Demand(jj)-alloc;
+        
+        % covered cell kyuki ab jise consider kr chuka ha use vapas nahi
+        % krna consider so ise inf krdo value ko
+        C(ii, jj)=inf;
+    end
+end
+disp(X); %initial BFS
+
+%compute initial transporation cost
+initialCost = sum(sum(icost.*X));
+disp(initialCost);
+
+if (length(nonzeros(X))==bfs)
+    fprintf("non degenrate\n");
+else
+    fprintf("Degenerate bfs\n");
+end
